@@ -8,6 +8,7 @@ dexml.fields:  basic field type definitions for dexml
 import dexml
 import random
 from xml.sax.saxutils import escape, quoteattr
+from utils import strptime_ISO_8601
 
 #  Global counter tracking the order in which fields are declared.
 _order_counter = 0
@@ -334,6 +335,22 @@ class CDATA(Value):
         val = self.render_value(val)
         val = val.replace("]]>","]]]]><![CDATA[>")
         return "<![CDATA[" + val + "]]>"
+
+
+class DateTime(Value):
+    """
+    This datatype describes instances identified by the combination of a date
+    and a time. Its value space is described as a combination of date and
+    time of day in Chapter 5.4 of ISO 8601. Its lexical space is the
+    extended format:
+
+    [-]CCYY-MM-DDThh:mm:ss[Z|(+|-)hh:mm]
+    """
+    def parse_value(self, val):
+        # wtf is negative datetime? the xml spec specifies an optional [-]
+        # but lets just ignore that for now...
+
+        return strptime_ISO_8601(val if val[0] == '-' else val[1:])
 
 
 class Integer(Value):
@@ -837,4 +854,3 @@ class XmlNode(Field):
     def render_children(cls,obj,val,nsmap):
         if val is not None:
             yield val.toxml()
-
